@@ -86,29 +86,28 @@ const main = async () => {
     setupExpressPlugins(app)
     const vivoxToken = setupVivoxToken()
 
-    app.get("/getToken/:type/:userId/:channelId", async (req, res) => {
-        const type = req.params.type
-        const userId = req.params.userId
-        const channelID = req.params.channelId
-
+    app.post("/createToken", async (req, res) => {
+        const tokenRequest = req.body
         try {
-            console.log(`creating token of type: ${type}, user: ${userId}`)
-            let loginToken: string = ""
-            switch (type) {
-                case "login":
-                    loginToken = vivoxToken.login(userId)
+            let token: string = ""
+            switch (tokenRequest.type) {
+                case 'login':
+                    token = vivoxToken.login(tokenRequest.userId)
+                    console.log(`created login token: ${token}`)
                     break;
-                case "join":
-                    loginToken = vivoxToken.join(userId, ChannelType.NonPositionalChannels, channelID)
-                 
+                    case 'join':
+                        token = vivoxToken.join(tokenRequest.userId, ChannelType.NonPositionalChannels, tokenRequest.channelID)
+                        console.log(`created join token: ${token}`)
+
                 // TODO add support for other vivox actions like joinMuted, etc.
                 default:
                     break;
             }
 
             res.setHeader("Access-Control-Expose-Headers", "token")
-            res.setHeader("token", loginToken).status(200).end()
+            res.setHeader("token", token).status(200).end()
         } catch (error: any) {
+            console.error(error)
             res.status(500).end()
         }
     })
